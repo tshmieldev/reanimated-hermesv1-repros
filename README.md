@@ -1,97 +1,64 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+> **You are on `repro-ios-legacy-importReanimatedOnly`** — bare `import Animated from 'react-native-reanimated'`.
 
-# Getting Started
+# react-native-reanimated / worklets — iOS memory repros
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+Minimal repros measuring iOS **memory footprint** growth when adding
+`react-native-worklets` / `react-native-reanimated` to a clean React Native app.
 
-## Step 1: Start Metro
+Upstream issue: https://github.com/software-mansion/react-native-reanimated/issues/9650
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Setup
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- Clean app from `@react-native-community/cli` (**no Expo**)
+- React Native **0.86.0**, React **19.2.3**
+- `react-native-worklets` **0.9.2**, `react-native-reanimated` **4.4.1**
+- Worklets in **legacy mode**
+- Platform: **iOS**
+
+Each repro lives on its own branch — one variable changed per branch.
+
+## Branches
+
+| Branch | `App.tsx` change | Extra dep |
+|---|---|---|
+| `main` | none — bare template | none |
+| `repro-ios-legacy-scheduleOnUIOnly` | `scheduleOnUI(() => { ... })` from `react-native-worklets` | `react-native-worklets` |
+| `repro-ios-legacy-importReanimatedOnly` | `import Animated` + `console.log(Animated)` | `react-native-reanimated` |
+| `repro-ios-legacy-mountAnimatedViewOnly` | renders `<Animated.View>` in the tree | `react-native-reanimated` |
+
+> Deps are scoped per branch: worklets-only branches do **not** pull in reanimated.
+
+## Results — iOS memory footprint
+
+### Dev build
+
+| Variant | Footprint |
+|---|---|
+| Clean (`main`) | 106 MB |
+| + worklets (`scheduleOnUIOnly`) | 120 MB |
+| + reanimated import (`importReanimatedOnly`) | 240 MB |
+
+Using `scheduleOnUI` vs. not calling it makes **no difference** — the cost is
+in adding the dependency, not in invoking it.
+
+### Prod build
+
+| Variant | Footprint |
+|---|---|
+| Clean (`main`) | 20 MB |
+| + worklets (`scheduleOnUIOnly`) | 33 MB |
+| + reanimated import (`importReanimatedOnly`) | 33 MB |
+| + mounted `<Animated.View>` (`mountAnimatedViewOnly`) | 86 MB 😨 |
+
+A bare reanimated import is the same cost as worklets in prod (33 MB), but
+**mounting a single `<Animated.View>` jumps to 86 MB**.
+
+## Run a repro
 
 ```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+git checkout <branch>
+npm install
+cd ios && bundle exec pod install && cd ..
+npm run ios          # dev
+# prod: build Release scheme in Xcode
 ```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
