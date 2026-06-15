@@ -7,7 +7,11 @@ const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
-const config = {};
+const config = {
+  hermesOptions: {
+    byteCodeVersion: 96,
+  },
+};
 
 module.exports = mergeConfig(
   getDefaultConfig(__dirname),
