@@ -1,96 +1,31 @@
-> **You are on `main`** — clean baseline, no worklets/reanimated.
-
 # react-native-reanimated / worklets — iOS memory repros
 
-Minimal repros measuring iOS **memory footprint** growth when adding
-`react-native-worklets` / `react-native-reanimated` to a clean React Native app,
-on **two Hermes bytecode targets**.
+A single mounted reanimated component balloons iOS memory on **default Hermes (v1) + legacy worklets** — up to **128 MB**. Both **worklets Bundle Mode** and **Hermes bytecode < v1** keep it flat (~17–25 MB). One variable per branch.
 
-The blowup only happens on the **default Hermes (v1)**. Targeting
-**Hermes bytecode < v1** (`byteCodeVersion: 96` in `metro.config.js`) the
-footprint stays flat.
+Measured with the **Leaks** instrument in Xcode · RN 0.86.0, reanimated 4.4.1, worklets 0.9.2, iOS.
+Origin: https://github.com/software-mansion/react-native-reanimated/issues/9650
 
-Upstream issue: https://github.com/software-mansion/react-native-reanimated/issues/9650
+## Prod (release build)
 
-## Setup
+| Variant | Legacy · v1 | Bundle · v1 | Legacy · <v1 | Bundle · <v1 |
+|---|---|---|---|---|
+| Clean | 20 MB | 21 MB | 20 MB | 21 MB |
+| + worklets (`scheduleOnUI`) | 33 MB | 23 MB | 21 MB | 23 MB |
+| + reanimated import | 33 MB | 24 MB | 22 MB | 17 MB |
+| + mounted `<Animated.View>` | 86 MB 😨 | 25 MB | 22 MB | 25 MB |
+| + `useAnimatedStyle` | 128 MB 😱 | 25 MB | 23 MB | 24 MB |
+| + reanimated v4 CSS animation | 87 MB 😨 | 24 MB | 22 MB | 17 MB |
 
-- Clean app from `@react-native-community/cli` (**no Expo**)
-- React Native **0.86.0**, React **19.2.3**
-- `react-native-worklets` **0.9.2**, `react-native-reanimated` **4.4.1**
-- Worklets in **legacy mode**
-- Platform: **iOS**
+- **Legacy / Bundle** — worklets [legacy mode](https://docs.swmansion.com/react-native-worklets/) vs [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/)
+- **v1 / <v1** — default Hermes vs bytecode `< v1` (`byteCodeVersion: 96` + `hermes-compiler@0.16.0` + `hermes-engine@0.17.0`)
+- The blowup is **legacy + Hermes v1 only**, and only when a reanimated component is **mounted** (a bare import stays at 33 MB).
 
-Each repro lives on its own branch — one variable changed per branch.
-
-Two Hermes targets:
-
-- **Hermes v1** (default) — `main`-based branches
-- **Hermes < v1** (`byteCodeVersion: 96`) — `prev1-setup`-based branches, suffixed `-prev1`
-
-## Branches
-
-| Branch | `App.tsx` change | Extra dep |
-|---|---|---|
-| `main` | none — bare template | none |
-| `prev1-setup` | none — bare template, Hermes bytecode 96 | none |
-| `repro-ios-legacy-scheduleOnUIOnly` | `scheduleOnUI(() => { ... })` from `react-native-worklets` | `react-native-worklets` |
-| `repro-ios-legacy-importReanimatedOnly` | `import Animated` + `console.log(Animated)` | `react-native-reanimated` |
-| `repro-ios-legacy-mountAnimatedViewOnly` | renders `<Animated.View>` in the tree | `react-native-reanimated` |
-| `repro-ios-legacy-scheduleOnUIOnly-prev1` | same as above, Hermes bytecode 96 | `react-native-worklets` |
-| `repro-ios-legacy-importReanimatedOnly-prev1` | same as above, Hermes bytecode 96 | `react-native-reanimated` |
-| `repro-ios-legacy-mountAnimatedViewOnly-prev1` | same as above, Hermes bytecode 96 | `react-native-reanimated` |
-
-> Deps are scoped per branch: worklets-only branches do **not** pull in reanimated.
-
-## Results — iOS memory footprint
-
-### Hermes v1 (default)
-
-**Dev build**
+## Dev build (Hermes v1, legacy)
 
 | Variant | Footprint |
 |---|---|
-| Clean (`main`) | 106 MB |
-| + worklets (`scheduleOnUIOnly`) | 120 MB |
-| + reanimated import (`importReanimatedOnly`) | 240 MB |
+| Clean | 106 MB |
+| + worklets (`scheduleOnUI`) | 120 MB |
+| + reanimated import | 240 MB |
 
-Using `scheduleOnUI` vs. not calling it makes **no difference** — the cost is
-in adding the dependency, not in invoking it.
-
-**Prod build**
-
-| Variant | Footprint |
-|---|---|
-| Clean (`main`) | 20 MB |
-| + worklets (`scheduleOnUIOnly`) | 33 MB |
-| + reanimated import (`importReanimatedOnly`) | 33 MB |
-| + mounted `<Animated.View>` (`mountAnimatedViewOnly`) | 86 MB 😨 |
-
-A bare reanimated import is the same cost as worklets in prod (33 MB), but
-**mounting a single `<Animated.View>` jumps to 86 MB**.
-
-### Hermes < v1 (`byteCodeVersion: 96`)
-
-**Prod build**
-
-| Variant | Footprint |
-|---|---|
-| Clean (`prev1-setup`) | 20 MB |
-| + worklets (`scheduleOnUIOnly-prev1`) | 21 MB |
-| + reanimated import (`importReanimatedOnly-prev1`) | 22 MB |
-| + mounted `<Animated.View>` (`mountAnimatedViewOnly-prev1`) | 22 MB 👌 |
-
-Targeting Hermes bytecode < v1 the footprint is **flat** — adding worklets,
-importing reanimated, and mounting an `<Animated.View>` all stay within ~2 MB
-of clean. The 86 MB blowup is **specific to Hermes v1**. (`scheduleOnUI`
-called vs. not still makes no difference.)
-
-## Run a repro
-
-```sh
-git checkout <branch>
-npm install
-cd ios && bundle exec pod install && cd ..
-npm run ios          # dev
-# prod: build Release scheme in Xcode
-```
+Calling `scheduleOnUI` vs. not makes no difference — the cost is adding the dependency, not invoking it.
