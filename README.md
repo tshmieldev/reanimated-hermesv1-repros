@@ -68,10 +68,11 @@ an `<Animated.View>` is what explodes** — `mountAnimatedViewOnly` (86 MB) and
 | + worklets (`scheduleOnUIOnly`) | 21 MB | 23 MB |
 | + reanimated import (`importReanimatedOnly`) | 22 MB | — |
 | + mounted `<Animated.View>` (`mountAnimatedViewOnly`) | 22 MB 👌 | 25 MB |
+| + `useAnimatedStyle` | — | — |
+| + reanimated CSS animation (`cssAnimation`) | — | — |
 
 Targeting Hermes bytecode < v1 also keeps it flat — the 86 MB blowup is
-**specific to Hermes v1 + legacy worklets**. (No `cssAnimation`/`useAnimatedStyle`
-`-prev1` branches exist.)
+**specific to Hermes v1 + legacy worklets**.
 
 ### Hermes v1 — dev build (legacy mode)
 
