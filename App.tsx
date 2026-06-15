@@ -23,7 +23,7 @@ function App() {
   const opacity = useSharedValue(1);
 
   useEffect(() => {
-    opacity.value = withRepeat(withTiming(0.2, { duration: 500 }), -1, true);
+    opacity.value = withRepeat(withTiming(0.2, { duration: 500 }), 3, true);
   }, [opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
