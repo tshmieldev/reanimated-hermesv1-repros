@@ -39,6 +39,9 @@
     "react-test-renderer": "19.2.3",
     "typescript": "^5.8.3"
   },
+  "overrides": {
+    "hermes-compiler": "0.16.0"
+  },
   "engines": {
     "node": ">= 22.11.0"
   }
