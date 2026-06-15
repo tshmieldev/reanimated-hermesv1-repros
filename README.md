@@ -52,12 +52,13 @@ Naming: `repro-ios-<mode>-<variant>[-prev1]`
 | + reanimated import (`importReanimatedOnly`) | 33 MB | — |
 | + mounted `<Animated.View>` (`mountAnimatedViewOnly`) | 86 MB 😨 | 25 MB ✅ |
 | + `useAnimatedStyle` | — | — |
-| + reanimated CSS animation (`cssAnimation`) | — | 24 MB |
+| + reanimated CSS animation (`cssAnimation`) | 87 MB 😨 | 24 MB |
 
 **Bundle mode fixes the blowup on Hermes v1** — a mounted `<Animated.View>`
 stays at **25 MB** instead of 86 MB, no bytecode workaround needed. A bare
-reanimated import is the same cost as worklets in legacy prod (33 MB); mounting
-the view is what explodes.
+reanimated import is the same cost as worklets in legacy prod (33 MB); **mounting
+an `<Animated.View>` is what explodes** — `mountAnimatedViewOnly` (86 MB) and
+`cssAnimation` (87 MB) both mount one and both blow up.
 
 ### Hermes < v1 (`byteCodeVersion: 96`)
 
