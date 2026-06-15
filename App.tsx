@@ -5,11 +5,17 @@
  * @format
  */
 
+import { useEffect } from "react";
 import { NewAppScreen } from "@react-native/new-app-screen";
 import { StatusBar, StyleSheet, Text, useColorScheme, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import Animated from "react-native-reanimated";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 
 function getRuntime() {
   if ("HermesInternal" in globalThis) {
@@ -29,11 +35,21 @@ function getRuntime() {
 function App() {
   const isDarkMode = useColorScheme() === "dark";
 
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    opacity.value = withRepeat(withTiming(0.2, { duration: 500 }), -1, true);
+  }, [opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <AppContent />
-      <Animated.View>
+      <Animated.View style={animatedStyle}>
         <Text>Skibidi</Text>
       </Animated.View>
       <Text>Hermes version: {getRuntime()}</Text>
