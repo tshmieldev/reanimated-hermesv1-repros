@@ -29,12 +29,13 @@ function getRuntime() {
 function App() {
   const isDarkMode = useColorScheme() === "dark";
 
-  console.log(Animated);
-
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <AppContent />
+      <Animated.View>
+        <Text>Skibidi</Text>
+      </Animated.View>
       <Text>Hermes version: {getRuntime()}</Text>
     </SafeAreaProvider>
   );
