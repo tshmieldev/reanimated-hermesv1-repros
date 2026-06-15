@@ -6,7 +6,7 @@
  */
 
 import { NewAppScreen } from "@react-native/new-app-screen";
-import { StatusBar, StyleSheet, useColorScheme, View } from "react-native";
+import { StatusBar, StyleSheet, Text, useColorScheme, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Animated from "react-native-reanimated";
@@ -14,12 +14,23 @@ import Animated from "react-native-reanimated";
 function App() {
   const isDarkMode = useColorScheme() === "dark";
 
-  console.log(Animated);
-
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <AppContent />
+      <Animated.View
+        style={{
+          animationName: {
+            from: { opacity: 1 },
+            to: { opacity: 0.2 },
+          },
+          animationDuration: "500ms",
+          animationIterationCount: "infinite",
+          animationDirection: "alternate",
+        }}
+      >
+        <Text>Skibidi</Text>
+      </Animated.View>
     </SafeAreaProvider>
   );
 }
