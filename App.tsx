@@ -33,7 +33,17 @@ function App() {
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <AppContent />
-      <Animated.View>
+      <Animated.View
+        style={{
+          animationName: {
+            from: { opacity: 1 },
+            to: { opacity: 0.2 },
+          },
+          animationDuration: "500ms",
+          animationIterationCount: "infinite",
+          animationDirection: "alternate",
+        }}
+      >
         <Text>Skibidi</Text>
       </Animated.View>
       <Text>Hermes version: {getRuntime()}</Text>
